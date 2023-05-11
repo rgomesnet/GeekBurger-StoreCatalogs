@@ -8,14 +8,20 @@ namespace GeekBurger.StoreCatalogs.Controllers
     public class ProductsController : ControllerBase
     {
         [HttpGet]
-        public IActionResult GetProducts(
+        public async Task<IActionResult> GetProducts(
             [FromQuery] string storeName,
             [FromQuery] int userId,
             [FromQuery] string[] restrictions,
             [FromServices] IGetProductService getProductService)
         {
-            var products = getProductService.GetProducts(storeName, userId, restrictions);
-            return Ok(products);
+            try
+            {
+                return Ok((await getProductService.GetProducts(storeName, userId, restrictions)));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

@@ -5,20 +5,25 @@ namespace GeekBurger.StoreCatalogs.Application.GetProducts
     public class GetProductService : IGetProductService
     {
         private readonly IProductRepository _productRepository;
+        private readonly IIngredientsClientService _ingredientsClientService;
 
-        public GetProductService(IProductRepository productRepository)
-            => _productRepository = productRepository;
+        public GetProductService(IProductRepository productRepository, IIngredientsClientService ingredientsClientService)
+            => (_productRepository, _ingredientsClientService) = (productRepository, ingredientsClientService);
 
-        public async Task<IEnumerable<ProductToGet>> GetProductsByStoreName(string storeName)
+        public async Task<IEnumerable<ProductToGet>> GetProducts(string storeName, int userId, IEnumerable<string> restrictions)
         {
-            await Task.CompletedTask;
-            return Enumerable.Empty<ProductToGet>();
-        }
+            var productIds = Enumerable.Empty<Guid>();
 
-        public async Task<IEnumerable<ProductToGet>> GetProducts(string storeName, int userId, string[] restrictions)
-        {
-            await Task.CompletedTask;
-            var producst = _productRepository.GetProductsByStoreName(storeName);
+            if (restrictions.Any())
+            {
+                var ingredientes =
+                    await _ingredientsClientService.GetIngredientsByRestrictions(storeName, restrictions);
+
+                productIds = ingredientes.Select(_ => _.ProductId);
+            }
+
+            var producst = _productRepository.GetProductsByStoreNameAndProductIds(storeName, productIds);
+
             return producst.Select(p => (ProductToGet)p).ToList();
         }
     }
